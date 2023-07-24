@@ -1,0 +1,33 @@
+
+# PETSc/SLEPc variables
+export PETSC_DIR=/data/shared/pileus/petsc
+export PETSC_ARCH=real-opt
+export SLEPC_DIR=/data/shared/pileus/slepc
+
+# Location of package dependencies
+export PACKAGES=/data/shared/pileus/petsc/packages
+
+# MPI variables
+export MPICH_DIR=$PACKAGES
+export MPIEXEC=$MPICH_DIR/bin/mpiexec
+export MPICC=$MPICH_DIR/bin/mpicc
+export MPICXX=$MPICH_DIR/bin/mpicxx
+export MPIFORT=$MPICH_DIR/bin/mpifort
+export MPIF90=$MPICH_DIR/bin/mpif90
+
+# Compiler variables (set to MPI wrappers)
+export CC=$MPICH_DIR/bin/mpicc
+export CXX=$MPICH_DIR/bin/mpicxx
+export FORT=$MPICH_DIR/bin/mpifort
+export F90=$MPICH_DIR/bin/mpif90
+
+# HDF5 Variables
+export HDF5_DIR=$PACKAGES
+export HDF5_MPI ON
+
+# Python
+export PYTHON=/usr/bin/python3.11
+
+# Turn off threading
+export OMP_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
