@@ -13,4 +13,4 @@ python3.11 firedrake-install \
     --mpicxx=$MPICXX \
     --mpif90=$MPIF90 \
     --mpiexec=$MPIEXEC \
-    --venv-name=third_test
+    --venv-name=firedrake-real-opt
