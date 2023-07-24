@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Set preferred executables
-CC=/usr/bin/gcc-10
-CXX=/usr/bin/g++-10
-FORT=/usr/bin/gfortran-10
+CC=/usr/bin/gcc-13
+CXX=/usr/bin/g++-13
+FORT=/usr/bin/gfortran-13
 PYTHON=/usr/bin/python3.11
 
 # Setup installation variables
@@ -11,51 +11,51 @@ BASE_INSTALL_DIR=$PWD
 MAKE_NP=32 # Use up to 32 cores when building
 
 # Clone Firedrake fork of repositories
-#~ git clone https://github.com/firedrakeproject/petsc.git
-#~ git clone https://github.com/firedrakeproject/slepc.git
+git clone https://github.com/firedrakeproject/petsc.git
+git clone https://github.com/firedrakeproject/slepc.git
 
 ####################
 # Part 1: Packages #
 ####################
 
 # Build MPICH and all required packages
-#~ cd $BASE_INSTALL_DIR/petsc
-#~ $PYTHON ./configure \
-    #~ --with-cc=$CC \
-    #~ --with-cxx=$CXX \
-    #~ --with-fc=$FORT \
-    #~ --with-python-exec=$PYTHON \
-    #~ --COPTFLAGS=-O3 -march=native -mtune=native \
-    #~ --CXXOPTFLAGS=-O3 -march=native -mtune=native \
-    #~ --FOPTFLAGS=-O3 -march=native -mtune=native \
-    #~ --with-c2html=0 \
-    #~ --with-debugging=0 \
-    #~ --with-fortran-bindings=0 \
-    #~ --with-make-np=$MAKE_NP \
-    #~ --with-shared-libraries=1 \
-    #~ --with-zlib \
-    #~ --download-chaco \
-    #~ --download-cmake \
-    #~ --download-fftw \
-    #~ --download-hdf5 \
-    #~ --download-hwloc \
-    #~ --download-hypre \
-    #~ --download-metis \
-    #~ --download-ml \
-    #~ --download-mumps \
-    #~ --download-mpich \
-    #~ --download-netcdf \
-    #~ --download-openblas \
-    #~ --download-pastix \
-    #~ --download-pnetcdf \
-    #~ --download-ptscotch \
-    #~ --download-scalapack \
-    #~ --download-suitesparse \
-    #~ --download-superlu_dist \
-    #~ PETSC_ARCH=packages
-#~ # Don't run make here, we only want MPICH and HWLOC
-#~ # It is also necessary to move `petscconf.h` so packages isn't treated like a working PETSc
-#~ mv packages/include/petscconf.h packages/include/old_petscconf.nope
+cd $BASE_INSTALL_DIR/petsc
+$PYTHON ./configure \
+    --with-cc=$CC \
+    --with-cxx=$CXX \
+    --with-fc=$FORT \
+    --with-python-exec=$PYTHON \
+    --COPTFLAGS=-O3 -march=native -mtune=native \
+    --CXXOPTFLAGS=-O3 -march=native -mtune=native \
+    --FOPTFLAGS=-O3 -march=native -mtune=native \
+    --with-c2html=0 \
+    --with-debugging=0 \
+    --with-fortran-bindings=0 \
+    --with-make-np=$MAKE_NP \
+    --with-shared-libraries=1 \
+    --with-zlib \
+    --download-chaco \
+    --download-cmake \
+    --download-fftw \
+    --download-hdf5 \
+    --download-hwloc \
+    --download-hypre \
+    --download-metis \
+    --download-ml \
+    --download-mumps \
+    --download-mpich \
+    --download-netcdf \
+    --download-openblas \
+    --download-pastix \
+    --download-pnetcdf \
+    --download-ptscotch \
+    --download-scalapack \
+    --download-suitesparse \
+    --download-superlu_dist \
+    PETSC_ARCH=packages
+# Don't run make here, we only want MPICH and HWLOC
+# It is also necessary to move `petscconf.h` so packages isn't treated like a working PETSc
+mv packages/include/petscconf.h packages/include/old_petscconf.nope
 export PACKAGES=$BASE_INSTALL_DIR/petsc/packages; \
 
 ####################
