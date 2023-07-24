@@ -24,8 +24,12 @@ sudo apt-get install emacs vim
 # XTerm for parallel debugging
 sudo apt-get install xterm
 
-# Newer compilers
-sudo pat-get install gcc-10 g++-10 gfortran-10
+# Newer compilers (and glibc)
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt-get update
+sudo apt-get dist-upgrade
+sudo apt-get upgrade libstdc++6
+sudo apt-get install gcc-13 g++-13 gfortran-13
 
 # Newer Python
 sudo add-apt-repository ppa:deadsnakes/ppa
