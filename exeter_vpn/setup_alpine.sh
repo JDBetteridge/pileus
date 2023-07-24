@@ -1,11 +1,14 @@
 # Install libvirt
-# sudo pacman -S virt-manager virt-viewer
+# sudo pacman -S virt-manager virt-viewer dnsmasq qemu-full
 # sudo systemctl start libvirtd.service
 # sudo systemctl start virtlogd.service
 # sudo systemctl enable libvirtd.service
 
 # curl -OL https://dl-cdn.alpinelinux.org/alpine/v3.18/releases/x86_64/alpine-standard-3.18.2-x86_64.iso
 curl -OL https://dl-cdn.alpinelinux.org/alpine/v3.18/releases/x86_64/alpine-virt-3.18.2-x86_64.iso
+
+# Do not do this, cannot find terminal command, add the directory in virt-manager
+# ??? setfacl -m u:libvirt-qemu:x ./
 
 sudo virsh net-start default
 
@@ -79,4 +82,6 @@ sudo virsh console exeter-gateway-lite
 # lbu commit
 # poweroff
 
-
+# reboot and attach via console again, then
+# apk add dropbear
+# No idea why this is required
