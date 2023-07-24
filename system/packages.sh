@@ -23,3 +23,11 @@ sudo apt-get install emacs vim
 
 # XTerm for parallel debugging
 sudo apt-get install xterm
+
+# Newer compilers
+sudo pat-get install gcc-10 g++-10 gfortran-10
+
+# Newer Python
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt-get update
+sudo apt-get install python3.11 python3.11-venv python3.11-dev python3.11-distutils
