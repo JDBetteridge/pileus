@@ -16,14 +16,19 @@ export MPIFORT=$MPICH_DIR/bin/mpifort
 export MPIF90=$MPICH_DIR/bin/mpif90
 
 # Compiler variables (set to MPI wrappers)
-export CC=$MPICH_DIR/bin/mpicc
-export CXX=$MPICH_DIR/bin/mpicxx
-export FORT=$MPICH_DIR/bin/mpifort
-export F90=$MPICH_DIR/bin/mpif90
+export CC=/usr/bin/gcc-13
+export CXX=/usr/bin/g++-13
+export FORT=/usr/bin/gfortran-13
+export F90=/usr/bin/gfortran-13
 
 # HDF5 Variables
 export HDF5_DIR=$PACKAGES
 export HDF5_MPI ON
+
+# BLAS and LAPACK variables
+export BLAS=$PACKAGES
+export LAPACK=$PACKAGES
+export OPENBLAS=$PACKAGES
 
 # Python
 export PYTHON=/usr/bin/python3.11
