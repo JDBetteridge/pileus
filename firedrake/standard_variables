@@ -17,7 +17,7 @@ export MPIF90=$MPICH_DIR/bin/mpif90
 
 # HDF5 Variables
 export HDF5_DIR=$PACKAGES
-export HDF5_MPI ON
+export HDF5_MPI=ON
 
 # BLAS and LAPACK variables
 export BLAS=$PACKAGES
