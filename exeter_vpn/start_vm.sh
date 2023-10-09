@@ -2,7 +2,7 @@
 
 # These are notes, not a script
 
-sudo virsh console exeter-gateway-lite
+sudo virsh start exeter-gateway-lite
 ssh 192.168.122.100 # or ssh exeter-gateway
 
 # On the gateway
