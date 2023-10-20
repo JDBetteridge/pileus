@@ -1,23 +1,20 @@
 import psutil
 
-from collections import namedtuple
+from display import display_jobs
 from pathlib import Path
 from pprint import pprint
-from process import ProcessFile
+from process import Row, ProcessFile
 from time import time
-
-Row = namedtuple('Row', ['pid', 'user', 'command', 'ncpu', 'mem', 'start'])
-
 
 
 def main():
     rows = []
     for db in Path('proc').glob('*.db'):
-        print(db)
+        # ~ print(db)
         user, uid = db.stem.split('-')
         pf = ProcessFile(filename=db)
-        print(user)
-        pprint(pf.pidmap)
+        # ~ print(user)
+        # ~ pprint(pf.pidmap)
         for pid in pf.pidmap.keys():
             p = psutil.Process(pid)
             with p.oneshot():
@@ -43,17 +40,8 @@ def main():
             # ~ print(f'\tTotal: {mem} ~= {mem/(1024*1024)} MB')
             rows.append(Row(rpid, user, rcmd, pf.pidmap[pid], mem, rtime))
 
-    print()
-    print()
-    print()
-    now = time()
-    print(f'NOW: {now}')
-    for r in rows:
-        walltime = now - r.start
-        hh = int(walltime//3600)
-        mm = int((walltime//60) % 60)
-        ss = walltime % 60
-        print(r, f'{hh:d}:{mm:02d}:{ss:05.2f}')
+    display_jobs(rows)
+
 
 if __name__ == '__main__':
     main()

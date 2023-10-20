@@ -1,7 +1,11 @@
 import os
 
+from collections import namedtuple
 from getpass import getuser
 from pprint import pprint
+
+
+Row = namedtuple('Row', ['pid', 'user', 'command', 'ncpu', 'mem', 'start'])
 
 
 def split_colon(alist):
@@ -28,6 +32,12 @@ def count_ranks(mpiargs):
     return total
 
 
+def ensure_directory():
+    prev = os.umask(0)
+    os.makedirs('proc', mode=0o777, exist_ok=True)
+    os.umask(prev)
+
+
 def opw_opener(filename, flags):
     # Create a file with 666 permissions
     prev = os.umask(0)
@@ -38,7 +48,7 @@ def opw_opener(filename, flags):
 
 class ProcessFile:
     def __init__(self, filename=None):
-        os.makedirs('proc', exist_ok=True)
+        ensure_directory()
         if filename:
             self.filename = filename
         else:
