@@ -4,8 +4,9 @@ import sys
 
 from argparse import ArgumentParser
 from getpass import getuser
-from process import ProcessFile, count_ranks
 from subprocess import Popen
+
+from .process import ProcessFile, count_ranks
 
 
 # True location of MPI launcher
@@ -20,7 +21,10 @@ def print_user_info():
     print()
 
 
-def main(known, unknown):
+def main():
+    parser = ArgumentParser(add_help=False)
+    known, unknown = parser.parse_known_args()
+
     mpiexec = MPI_EXEC
     status = Popen(
         [mpiexec] + unknown,
@@ -38,6 +42,4 @@ def main(known, unknown):
 
 
 if __name__ == '__main__':
-    parser = ArgumentParser(add_help=False)
-    known, unknown = parser.parse_known_args()
-    main(known, unknown)
+    main()

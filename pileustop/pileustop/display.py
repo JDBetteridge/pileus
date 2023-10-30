@@ -1,7 +1,7 @@
 from time import time
 from shlex import split
 
-from process import Row
+from .process import Row
 
 
 def display_cores():
@@ -94,10 +94,10 @@ def display_jobs(jobs, wide=False):
         print(rowstring)
     print(sep)
     totals = '| TOTAL: |'
-    totals += '|'.join(['-'*ww for ww in width[1:3]])
+    totals += '|'.join([' '*ww for ww in width[1:3]])
     totals += '|' + f'{total_cpu: {width[3]}d}|'
     totals += f'{nice_mem(total_mem):>{width[4]}s}|'
-    totals += '-'*width[-1] + '|'
+    totals += ' '*width[-1] + '|'
     print(totals)
     print(sep)
 

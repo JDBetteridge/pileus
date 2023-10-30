@@ -1,12 +1,13 @@
 import psutil
 
 from argparse import ArgumentParser
-from display import display_jobs
 from pathlib import Path
-from process import RUN_DIR, Row, ProcessFile
+
+from .display import display_jobs
+from .process import RUN_DIR, Row, ProcessFile
 
 
-def main(args):
+def pileustop(args):
     rows = []
     for db in Path(RUN_DIR).glob('*.db'):
         user, uid = db.stem.split('-')
@@ -36,7 +37,7 @@ def main(args):
     display_jobs(rows, args.wide)
 
 
-if __name__ == '__main__':
+def main():
     parser = ArgumentParser()
     parser.add_argument(
         '-w', '--wide',
@@ -44,4 +45,8 @@ if __name__ == '__main__':
         action='store_true'
     )
     args = parser.parse_args()
-    main(args)
+    pileustop(args)
+
+
+if __name__ == '__main__':
+    main()
