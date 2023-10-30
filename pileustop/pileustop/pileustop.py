@@ -3,7 +3,7 @@ import psutil
 from argparse import ArgumentParser
 from pathlib import Path
 
-from .display import display_jobs
+from .display import display_cores, display_memory, display_jobs
 from .process import RUN_DIR, Row, ProcessFile
 
 
@@ -34,6 +34,8 @@ def pileustop(args):
             except psutil.NoSuchProcess:
                 continue
 
+    display_cores(rows, args.wide)
+    display_memory(rows, args.wide)
     display_jobs(rows, args.wide)
 
 

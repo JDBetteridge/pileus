@@ -1,21 +1,52 @@
-from time import time
+import psutil
+
+from collections import defaultdict
+from pprint import pprint
 from shlex import split
+from time import time
 
 from .process import Row
 
 
-def display_cores():
-    pass
+def display_cores(jobs, wide=False):
+    print('#========#')
+    print('#  CPU   #')
+    print('#========#')
+    system_cores = psutil.cpu_count(logical=False)
+
+    allocation = defaultdict(int)
+    for j in jobs:
+        allocation[j.user] += j.ncpu
+    pprint(sorted(allocation.items(), key=lambda x: x[1], reverse=True))
+    print()
 
 
-def display_memory():
-    pass
+def display_memory(jobs, wide=False):
+    print('#========#')
+    print('# MEMORY #')
+    print('#========#')
+    memory_info = psutil.virtual_memory()
+    system_memory = memory_info.total
+
+    allocation = defaultdict(int)
+    for j in jobs:
+        allocation[j.user] += j.mem
+    allocation['system'] = system_memory \
+        - memory_info.available \
+        - sum(allocation.values())
+
+    mem_alloc = sorted(allocation.items(), key=lambda x: x[1], reverse=True)
+    pprint([(k, nice_mem(v) + 'GB') for k, v in mem_alloc])
+    print()
 
 
 def sniff_command(command):
     parts = split(command)
     if any(filter(lambda x: x.endswith('python'), parts)):
         name = 'python ' + ' '.join(filter(lambda x: x.endswith('.py'), parts))
+    elif parts[0].endswith('mpiexec.hydra'):
+        parts[0] = 'mpiexec'
+        name = ' '.join(parts)
     else:
         name = command
     return name
@@ -23,7 +54,7 @@ def sniff_command(command):
 
 def nice_mem(mem):
     nice = mem/(1024*1024*1024)
-    if nice < 0.1:
+    if nice < 0.01:
         nicestring = '<0.01'
     else:
         nicestring = f'{nice: 7.2f}'
@@ -50,6 +81,9 @@ def calculate_walltime(start, now):
 
 
 def display_jobs(jobs, wide=False):
+    print('#========#')
+    print('#  JOBS  #')
+    print('#========#')
     # Choose command to fit 25x80 or 25x120 Terminal width
     tmp_width = (8, 15, 0, 3, 7, 15)
     if wide:
@@ -100,6 +134,7 @@ def display_jobs(jobs, wide=False):
     totals += ' '*width[-1] + '|'
     print(totals)
     print(sep)
+    print()
 
 
 if __name__ == '__main__':
@@ -112,4 +147,6 @@ if __name__ == '__main__':
         start=1697795306.76
     )
     jobs = [r]
+
+    display_cores(jobs, wide=True)
     display_jobs(jobs, wide=True)
