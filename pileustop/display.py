@@ -76,6 +76,8 @@ def display_jobs(jobs, wide=False):
     print(unitrow)
     print(sep)
     now = time()
+    total_cpu = 0
+    total_mem = 0
     for row in jobs:
         rowstring = '|'
         rowstring += f'{row.pid: {width[0]}d}|'
@@ -85,9 +87,18 @@ def display_jobs(jobs, wide=False):
             command = command[:width[2] - 4] + '...'
         rowstring += f' {command :<{width[2] - 1}s}|'
         rowstring += f'{row.ncpu: {width[3]}d}|'
+        total_cpu += row.ncpu
         rowstring += f'{nice_mem(row.mem):>{width[4]}s}|'
+        total_mem += row.mem
         rowstring += f'{calculate_walltime(row.start, now):>{width[5]}s}|'
         print(rowstring)
+    print(sep)
+    totals = '| TOTAL: |'
+    totals += '|'.join(['-'*ww for ww in width[1:3]])
+    totals += '|' + f'{total_cpu: {width[3]}d}|'
+    totals += f'{nice_mem(total_mem):>{width[4]}s}|'
+    totals += '-'*width[-1] + '|'
+    print(totals)
     print(sep)
 
 

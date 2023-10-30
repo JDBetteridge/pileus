@@ -1,3 +1,4 @@
+#!/usr/bin/python3.11
 import os
 import sys
 
@@ -8,7 +9,7 @@ from subprocess import Popen
 
 
 # True location of MPI launcher
-MPI_EXEC = '/opt/mpich/bin/mpiexec.hydra'
+MPI_EXEC = '/data/shared/pileus/petsc/packages/bin/mpiexec.hydra'
 
 
 def print_user_info():
