@@ -15,16 +15,19 @@ def main(args):
         size = csize.value
 
         crank = ctypes.c_int()
-        err = mpi.MPI_Comm_rank(MPI_COMM_WORLD, ctypes.byref(crank))
+        err = mpi.MPI_Comm_rank(  # noqa: F841
+            MPI_COMM_WORLD,
+            ctypes.byref(crank)
+        )
         rank = crank.value
 
         if args.verbose:
-            print(f'Using MPI, allocating {args.memory}MB over {size} ranks for {args.time}sec')
-            print(f'Using MPI, allocating {args.memory//size}MB on rank {rank}')
+            print(f'Using MPI, allocating {args.memory}MB over {size} ranks for {args.time}sec')  # noqa: E501
+            print(f'Using MPI, allocating {args.memory//size}MB on rank {rank}')  # noqa: E501
     except OSError:
         print('No MPI found')
         if args.verbose:
-            print(f'No MPI found, allocating {args.memory}MB on ALL ranks for {args.time}sec')
+            print(f'No MPI found, allocating {args.memory}MB on ALL ranks for {args.time}sec')  # noqa: E501
         mpi = None
         size = 1
 
@@ -38,10 +41,28 @@ def main(args):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('-m', '--memory', help='memory to consume (in MB)', type=int, required=True)
-    parser.add_argument('-t', '--time', help='time to consume', type=int, required=True)
-    parser.add_argument('-v', '--verbose', help='print information as we go', action='store_true')
-    parser.add_argument('-n', '--nothing', help='unused', type=int)
+    parser.add_argument(
+        '-m', '--memory',
+        help='memory to consume (in MB)',
+        type=int,
+        required=True
+    )
+    parser.add_argument(
+        '-t', '--time',
+        help='time to consume',
+        type=int,
+        required=True
+    )
+    parser.add_argument(
+        '-v', '--verbose',
+        help='print information as we go',
+        action='store_true'
+    )
+    parser.add_argument(
+        '-n', '--nothing',
+        help='unused',
+        type=int
+    )
 
     args = parser.parse_args()
     main(args)

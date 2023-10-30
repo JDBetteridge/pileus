@@ -49,7 +49,6 @@ def calculate_walltime(start, now):
     return wstring
 
 
-
 def display_jobs(jobs, wide=False):
     # Choose command to fit 25x80 or 25x120 Terminal width
     tmp_width = (8, 15, 0, 3, 7, 15)
@@ -68,8 +67,10 @@ def display_jobs(jobs, wide=False):
         'Walltime'
     ]
     unit = ['']*4 + ['GB', 'DAYdHH:MM:SS.xx']
-    titles = '|' + '|'.join([f'{hh:^{ww}s}' for hh, ww in zip(heading, width)]) + '|'
-    unitrow = '|' + '|'.join([f'{uu:^{ww}s}' for uu, ww in zip(unit, width)]) + '|'
+    titles = '|' \
+        + '|'.join([f'{hh:^{ww}s}' for hh, ww in zip(heading, width)]) + '|'
+    unitrow = '|' \
+        + '|'.join([f'{uu:^{ww}s}' for uu, ww in zip(unit, width)]) + '|'
     print(sep)
     print(titles)
     print(unitrow)
@@ -89,7 +90,15 @@ def display_jobs(jobs, wide=False):
         print(rowstring)
     print(sep)
 
+
 if __name__ == '__main__':
-    r = Row(pid=12987, user='jack', command='/opt/mpich/bin/mpiexec.hydra -n 3 sleep 60', ncpu=3, mem=11927552, start=1697795306.76)
+    r = Row(
+        pid=12987,
+        user='jack',
+        command='/opt/mpich/bin/mpiexec.hydra -n 3 sleep 60',
+        ncpu=3,
+        mem=11927552,
+        start=1697795306.76
+    )
     jobs = [r]
-    display_jobs(jobs)
+    display_jobs(jobs, wide=True)

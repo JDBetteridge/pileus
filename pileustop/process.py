@@ -2,7 +2,6 @@ import os
 
 from collections import namedtuple
 from getpass import getuser
-from pprint import pprint
 
 
 Row = namedtuple('Row', ['pid', 'user', 'command', 'ncpu', 'mem', 'start'])
@@ -38,6 +37,8 @@ def count_ranks(mpiargs):
 def ensure_directory():
     prev = os.umask(0)
     try:
+        # Create a directory with 777 permissions in system location
+        # This requires sudo :-/
         os.makedirs(RUN_DIR, mode=0o777, exist_ok=True)
     except PermissionError as e:
         print(
@@ -80,7 +81,6 @@ class ProcessFile:
     def remove_pid(self, pid):
         # Read
         pidmap = self.pidmap
-        # ~ pprint(pidmap)
         # Remove
         try:
             del pidmap[pid]
