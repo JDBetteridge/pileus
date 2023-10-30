@@ -8,6 +8,9 @@ from pprint import pprint
 Row = namedtuple('Row', ['pid', 'user', 'command', 'ncpu', 'mem', 'start'])
 
 
+RUN_DIR = '/run/pileustop'
+
+
 def split_colon(alist):
     returnlist = []
     block = []
@@ -34,7 +37,14 @@ def count_ranks(mpiargs):
 
 def ensure_directory():
     prev = os.umask(0)
-    os.makedirs('proc', mode=0o777, exist_ok=True)
+    try:
+        os.makedirs(RUN_DIR, mode=0o777, exist_ok=True)
+    except PermissionError as e:
+        print(
+            'Insufficent permission, ask your administrator to run\n'
+            f'\tsudo mkdir {RUN_DIR}; sudo chmod 777 {RUN_DIR}'
+        )
+        raise e
     os.umask(prev)
 
 
@@ -52,7 +62,7 @@ class ProcessFile:
         if filename:
             self.filename = filename
         else:
-            self.filename = f'proc/{getuser()}-{os.getuid()}.db'
+            self.filename = f'{RUN_DIR}/{getuser()}-{os.getuid()}.db'
 
     def add_pid(self, pid, size=1):
         with open(self.filename, 'a', opener=opw_opener) as fh:

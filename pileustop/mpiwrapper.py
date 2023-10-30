@@ -7,6 +7,10 @@ from process import ProcessFile, count_ranks
 from subprocess import Popen
 
 
+# True location of MPI launcher
+MPI_EXEC = '/opt/mpich/bin/mpiexec.hydra'
+
+
 def print_user_info():
     print(f'Username   : {getuser()}')
     print(f'Loginname  : {os.getlogin()}')
@@ -18,16 +22,16 @@ def print_user_info():
 def main(known, unknown):
     # ~ print(f'{known._get_args() = }')
     # ~ print(f'{unknown = }')
-    print(f'RANKS: {count_ranks(unknown)}')
+    # ~ print(f'RANKS: {count_ranks(unknown)}')
 
-    mpiexec = '/opt/mpich/bin/mpiexec.hydra'
+    mpiexec = MPI_EXEC
     status = Popen(
         [mpiexec] + unknown,
         stdout=sys.stdout,
         stderr=sys.stderr,
         start_new_session=True
     )
-    print(f'PID: {status.pid}')
+    # ~ print(f'PID: {status.pid}')
 
     user_process_file = ProcessFile()
     # TODO: detect the number of ranks requested

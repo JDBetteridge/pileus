@@ -1,22 +1,27 @@
 import psutil
 
+from argparse import ArgumentParser
 from display import display_jobs
 from pathlib import Path
 from pprint import pprint
-from process import Row, ProcessFile
+from process import RUN_DIR, Row, ProcessFile
 from time import time
 
 
-def main():
+def main(args):
     rows = []
-    for db in Path('proc').glob('*.db'):
+    for db in Path(RUN_DIR).glob('*.db'):
         # ~ print(db)
         user, uid = db.stem.split('-')
         pf = ProcessFile(filename=db)
         # ~ print(user)
         # ~ pprint(pf.pidmap)
         for pid in pf.pidmap.keys():
-            p = psutil.Process(pid)
+            try:
+                p = psutil.Process(pid)
+            except psutil.NoSuchProcess:
+                pf.remove_pid(pid)
+                continue
             with p.oneshot():
                 rpid = p.pid
                 # ~ print(f'PID:            {rpid}')
@@ -40,8 +45,11 @@ def main():
             # ~ print(f'\tTotal: {mem} ~= {mem/(1024*1024)} MB')
             rows.append(Row(rpid, user, rcmd, pf.pidmap[pid], mem, rtime))
 
-    display_jobs(rows)
+    display_jobs(rows, args.wide)
 
 
 if __name__ == '__main__':
-    main()
+    parser = ArgumentParser()
+    parser.add_argument('-w', '--wide', help='Use 120 character wide display rather than 80', action='store_true')
+    args = parser.parse_args()
+    main(args)
