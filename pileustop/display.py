@@ -1,4 +1,5 @@
 from time import time
+from shlex import split
 
 from process import Row
 
@@ -12,8 +13,12 @@ def display_memory():
 
 
 def sniff_command(command):
-    parts = command.split(' ')
-    return ' '.join(parts[-2:])
+    parts = split(command)
+    if filter(lambda x: x.endswith('python'), parts):
+        name = 'python ' + ' '.join(filter(lambda x: x.endswith('.py') ,parts))
+    else:
+        name = 'unknown'
+    return name[:40]
 
 
 def nice_mem(mem):
@@ -68,7 +73,7 @@ def display_jobs(jobs):
         rowstring = '|'
         rowstring += f'{row.pid: {width[0]}d}|'
         rowstring += f'{row.user:>{width[1] - 1}s} |'
-        rowstring += f'{sniff_command(row.command):>{width[2] - 1}s} |'
+        rowstring += f' {sniff_command(row.command):<{width[2] - 1}s}|'
         rowstring += f'{row.ncpu: {width[3]}d}|'
         rowstring += f'{nice_mem(row.mem):>{width[4]}s}|'
         rowstring += f'{calculate_walltime(row.start, now):>{width[5]}s}|'
