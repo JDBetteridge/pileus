@@ -8,16 +8,55 @@ from time import time
 from .process import Row
 
 
+class AlphaHashTable:
+    def __init__(self):
+        self._alpha = ''.join(u + l for u, l in zip(
+            (chr(ii) for ii in range(65, 91)),
+            (chr(ii) for ii in range(97, 123))
+        ))
+        self.available_keys = set(self._alpha)
+        self._table = {}
+    def add(self, user, alt=None):
+        if user not in self._table.keys():
+            key = alt or user[0].upper()
+            for _ in self._alpha:
+                if key not in self.available_keys:
+                    new_idx = (self._alpha.find(key) + 1) % len(self._alpha)
+                    key = self._alpha[new_idx]
+                else:
+                    self.available_keys.remove(key)
+                    self._table[user] = key
+                    break
+            else:
+                raise RuntimeError('No keys left! This is not a good hash table')
+    def __getitem__(self, user):
+        try:
+            return self._table[user]
+        except KeyError as e:
+            raise e
+
+
 def display_cores(jobs, wide=False):
     print('#========#')
     print('#  CPU   #')
     print('#========#')
     system_cores = psutil.cpu_count(logical=False)
+    symbol = AlphaHashTable()
 
     allocation = defaultdict(int)
     for j in jobs:
+        symbol.add(j.user)
         allocation[j.user] += j.ncpu
-    pprint(sorted(allocation.items(), key=lambda x: x[1], reverse=True))
+    cpu_alloc = sorted(allocation.items(), key=lambda x: x[1], reverse=True)
+    pprint(cpu_alloc)
+
+    left = system_cores
+    magic_string = ''
+    for user, cores in cpu_alloc:
+        magic_string += f' {symbol[user]}'*cores
+        left -= cores
+    magic_string += ' .'*left
+    print(magic_string)
     print()
 
 
@@ -27,9 +66,11 @@ def display_memory(jobs, wide=False):
     print('#========#')
     memory_info = psutil.virtual_memory()
     system_memory = memory_info.total
+    symbol = AlphaHashTable()
 
     allocation = defaultdict(int)
     for j in jobs:
+        symbol.add(j.user)
         allocation[j.user] += j.mem
     allocation['system'] = system_memory \
         - memory_info.available \
@@ -37,6 +78,13 @@ def display_memory(jobs, wide=False):
 
     mem_alloc = sorted(allocation.items(), key=lambda x: x[1], reverse=True)
     pprint([(k, nice_mem(v) + 'GB') for k, v in mem_alloc])
+    width = 120 if wide else 80
+    magic_string = '*'*int(width*allocation['system']/system_memory)
+    for user, mem in mem_alloc:
+        if user != 'system':
+            magic_string += symbol[user]*int(width*mem/system_memory)
+    magic_string += '.'*int(width*memory_info.available/system_memory)
+    print(magic_string)
     print()
 
 
