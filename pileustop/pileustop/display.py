@@ -8,6 +8,184 @@ from time import time
 from .process import Row
 
 
+class DisplayError(Exception):
+    pass
+
+
+_ascii_single = """
++-+-+-+
+| | | |
++-+-+-+
+| | | |
++-+-+-+
+| | | |
++-+-+-+
+"""
+_ascii_double = """
+#=#=#=#
+# # # #
+#=#=#=#
+# # # #
+#=#=#=#
+# # # #
+#=#=#=#
+"""
+_single_wall_rounded = """
+╭─┬─┬─╮
+│ │ │ │
+├─┼─┼─┤
+│ │ │ │
+├─┼─┼─┤
+│ │ │ │
+╰─┴─┴─╯
+"""
+_bold_outline = """
+┏━┳━┯━┓
+┃ ┃ │ ┃
+┣━╋━┿━┫
+┃ ┃ │ ┃
+┠─╂─┼─┨
+┃ ┃ │ ┃
+┗━┻━┷━┛
+"""
+_double_wall = """
+╔═╦═╦═╗
+║ ║ ║ ║
+╠═╬═╬═╣
+║ ║ ║ ║
+╠═╬═╬═╣
+║ ║ ║ ║
+╚═╩═╩═╝
+"""
+
+
+class TerminalScreen:
+    def __init__(self, width=80, unicode=False):
+        self.width = width
+        self.unicode = unicode
+
+
+class Decorator:
+    def __init__(self, format_=_ascii_single):
+        self._format = format_
+        table = [r for r in format_.split('\n') if r]
+        # Top left, top right, bottom left, bottom right -- corners
+        self.tl = table[0][0]
+        self.tr = table[0][-1]
+        self.bl = table[-1][0]
+        self.br = table[-1][-1]
+        # Outside horizontal, outside vertical
+        self.oh = table[0][1]
+        self.ov = table[1][0]
+        # HEADING horizontal, HEADING vertical
+        self.Hh = table[2][1]
+        self.Hv = table[1][2]
+        # Inside horizontal, inside vertical
+        self.ih = table[4][1]
+        self.iv = table[1][4]
+        # Top HEADING vertical, top vertical -- intersections
+        self.tHv = table[0][2]
+        self.tv = table[0][4]
+        # Bottom HEADING vertical, bottom vertical -- intersections
+        self.bHv = table[-1][2]
+        self.bv = table[-1][4]
+        # Left HEADING horizontal, left horizontal -- intersections
+        self.lHh = table[2][0]
+        self.lh = table[4][0]
+        # Right HEADING horizontal, right horizontal -- intersections
+        self.rHh = table[2][-1]
+        self.rh = table[4][-1]
+        # HEADING HEADING, inside inside --instersections
+        self.HH = table[2][2]
+        self.ii = table[4][4]
+        # HEADING inside horizontal, HEADING inside vertical --instersections
+        self.Hih = table[4][2]
+        self.Hiv = table[2][4]
+
+    def __repr__(self):
+        return self.__name__ + '(' + str(self._format) + '\n)'
+
+
+class Box(Decorator):
+    def __init__(self, screen, width, text='', boxformat=_ascii_double):
+        super().__init__(boxformat)
+        if width > screen.width:
+            raise DisplayError('Box width wider than screen width')
+        self.width = width
+        self.text = text
+
+    def __str__(self):
+        iw = self.width - 2
+        string = self.tl + self.oh*(iw) + self.tr + '\n'
+        for line in self.text.split('\n'):
+            string += self.ov + f'{line:^{iw}s}' + self.ov + '\n'
+        string += self.bl + self.oh*(iw) + self.br
+        return string
+
+
+class Table(Decorator):
+    def __init__(
+        self, screen, widths, alignment=None, tableformat=_ascii_single
+    ):
+        super().__init__(tableformat)
+        free = screen.width - 1 - len(widths) \
+            - sum(filter(lambda x: isinstance(x, int), widths))
+        if free < 0:
+            raise DisplayError('Table width wider than screen width')
+        nflex_cols = widths.count('*')
+        min_flex_width = free//nflex_cols
+        remainder = free - (nflex_cols*min_flex_width)
+        flex_widths = [min_flex_width + 1] * remainder
+        flex_widths.extend([min_flex_width] * (nflex_cols - remainder))
+
+        fixed_widths = []
+        for w in widths:
+            if isinstance(w, int):
+                fixed_widths.append(w)
+            else:
+                fixed_widths.append(flex_widths.pop(0))
+        self.widths = fixed_widths
+        self.alignment = alignment or ('^',)*len(widths)
+        self.type_dict = {
+            int: 'd',
+            float: 'f',
+            str: 's'
+        }
+
+    def bar(self, left, horizontal, intersection, right):
+        return left + \
+            intersection.join([horizontal*w for w in self.widths]) + right
+
+    @property
+    def top_bar(self):
+        return self.bar(self.tl, self.oh, self.tv, self.tr)
+
+    @property
+    def heading_bar(self):
+        return self.bar(self.lHh, self.Hh, self.Hiv, self.rHh)
+
+    @property
+    def horizontal_bar(self):
+        return self.bar(self.lHh, self.Hh, self.Hiv, self.rHh)
+
+    @property
+    def bottom_bar(self):
+        return self.bar(self.bl, self.oh, self.bv, self.br)
+
+    def row(self, row, alignment=None):
+        alignment = alignment or self.alignment
+        return self.ov + self.iv.join([
+            f'{col:{a}{w}{self.type_dict[type(col)]}}'
+            for col, w, a in zip(row, self.widths, alignment)
+        ]) + self.ov
+
+    def heading(self, heading, alignment=None):
+        return self.row(heading, alignment)
+
+    def footer(self, footer, alignment=None):
+        return self.row(footer, alignment)
+
+
 class AlphaHashTable:
     def __init__(self):
         self._alpha = ''.join(u + l for u, l in zip(
@@ -16,6 +194,7 @@ class AlphaHashTable:
         ))
         self.available_keys = set(self._alpha)
         self._table = {}
+
     def add(self, user, alt=None):
         if user not in self._table.keys():
             key = alt or user[0].upper()
@@ -28,7 +207,10 @@ class AlphaHashTable:
                     self._table[user] = key
                     break
             else:
-                raise RuntimeError('No keys left! This is not a good hash table')
+                raise RuntimeError(
+                    'No keys left! This is not a good hash table'
+                )
+
     def __getitem__(self, user):
         try:
             return self._table[user]
@@ -36,10 +218,13 @@ class AlphaHashTable:
             raise e
 
 
-def display_cores(jobs, wide=False):
-    print('#========#')
-    print('#  CPU   #')
-    print('#========#')
+def display_cores(screen, jobs):
+    print(Box(
+        screen,
+        10,
+        'CPU',
+        boxformat=_double_wall if screen.unicode else _ascii_double
+    ))
     system_cores = psutil.cpu_count(logical=False)
     symbol = AlphaHashTable()
 
@@ -48,7 +233,8 @@ def display_cores(jobs, wide=False):
         symbol.add(j.user)
         allocation[j.user] += j.ncpu
     cpu_alloc = sorted(allocation.items(), key=lambda x: x[1], reverse=True)
-    pprint(cpu_alloc)
+    table = [(symbol[u], u, c) for u, c in cpu_alloc]
+    pprint(table)
 
     left = system_cores
     magic_string = ''
@@ -60,10 +246,13 @@ def display_cores(jobs, wide=False):
     print()
 
 
-def display_memory(jobs, wide=False):
-    print('#========#')
-    print('# MEMORY #')
-    print('#========#')
+def display_memory(screen, jobs):
+    print(Box(
+        screen,
+        10,
+        'MEMORY',
+        boxformat=_double_wall if screen.unicode else _ascii_double
+    ))
     memory_info = psutil.virtual_memory()
     system_memory = memory_info.total
     symbol = AlphaHashTable()
@@ -78,7 +267,7 @@ def display_memory(jobs, wide=False):
 
     mem_alloc = sorted(allocation.items(), key=lambda x: x[1], reverse=True)
     pprint([(k, nice_mem(v) + 'GB') for k, v in mem_alloc])
-    width = 120 if wide else 80
+    width = screen.width
     magic_string = '*'*int(width*allocation['system']/system_memory)
     for user, mem in mem_alloc:
         if user != 'system':
@@ -128,18 +317,63 @@ def calculate_walltime(start, now):
     return wstring
 
 
-def display_jobs(jobs, wide=False):
-    print('#========#')
-    print('#  JOBS  #')
-    print('#========#')
-    # Choose command to fit 25x80 or 25x120 Terminal width
-    tmp_width = (8, 15, 0, 3, 7, 15)
-    if wide:
-        command_width = 120 - 8 - sum(tmp_width)
-    else:
-        command_width = 80 - 8 - sum(tmp_width)
-    width = (8, 15, command_width, 3, 7, 15)
-    sep = '+' + '+'.join(['-'*ww for ww in width]) + '+'
+def display_jobs(screen, jobs):
+    print(Box(
+        screen,
+        10,
+        'JOBS',
+        boxformat=_double_wall if screen.unicode else _ascii_double
+    ))
+    # ~ # Choose command to fit 25x80 or 25x120 Terminal width
+    # ~ tmp_width = (8, 15, 0, 3, 7, 15)
+    # ~ command_width = screen.width - 8 - sum(tmp_width)
+    # ~ width = (8, 15, command_width, 3, 7, 15)
+    # ~ sep = '+' + '+'.join(['-'*ww for ww in width]) + '+'
+    # ~ heading = [
+        # ~ 'PID',
+        # ~ 'User',
+        # ~ 'Command',
+        # ~ 'CPU',
+        # ~ 'Memory',
+        # ~ 'Walltime'
+    # ~ ]
+    # ~ unit = ['']*4 + ['GB', 'DAYdHH:MM:SS.xx']
+    # ~ titles = '|' \
+        # ~ + '|'.join([f'{hh:^{ww}s}' for hh, ww in zip(heading, width)]) + '|'
+    # ~ unitrow = '|' \
+        # ~ + '|'.join([f'{uu:^{ww}s}' for uu, ww in zip(unit, width)]) + '|'
+    # ~ print(sep)
+    # ~ print(titles)
+    # ~ print(unitrow)
+    # ~ print(sep)
+    # ~ now = time()
+    # ~ total_cpu = 0
+    # ~ total_mem = 0
+    # ~ for row in jobs:
+        # ~ rowstring = '|'
+        # ~ rowstring += f'{row.pid: {width[0]}d}|'
+        # ~ rowstring += f'{row.user:>{width[1] - 1}s} |'
+        # ~ command = sniff_command(row.command)
+        # ~ if len(command) > width[2] - 1:
+            # ~ command = command[:width[2] - 4] + '...'
+        # ~ rowstring += f' {command :<{width[2] - 1}s}|'
+        # ~ rowstring += f'{row.ncpu: {width[3]}d}|'
+        # ~ total_cpu += row.ncpu
+        # ~ rowstring += f'{nice_mem(row.mem):>{width[4]}s}|'
+        # ~ total_mem += row.mem
+        # ~ rowstring += f'{calculate_walltime(row.start, now):>{width[5]}s}|'
+        # ~ print(rowstring)
+    # ~ print(sep)
+    # ~ totals = '| TOTAL: |'
+    # ~ totals += '|'.join([' '*ww for ww in width[1:3]])
+    # ~ totals += '|' + f'{total_cpu: {width[3]}d}|'
+    # ~ totals += f'{nice_mem(total_mem):>{width[4]}s}|'
+    # ~ totals += ' '*width[-1] + '|'
+    # ~ print(totals)
+    # ~ print(sep)
+    # ~ print()
+
+    widths = (8, 15, '*', 3, 7, 15)
     heading = [
         'PID',
         'User',
@@ -149,40 +383,36 @@ def display_jobs(jobs, wide=False):
         'Walltime'
     ]
     unit = ['']*4 + ['GB', 'DAYdHH:MM:SS.xx']
-    titles = '|' \
-        + '|'.join([f'{hh:^{ww}s}' for hh, ww in zip(heading, width)]) + '|'
-    unitrow = '|' \
-        + '|'.join([f'{uu:^{ww}s}' for uu, ww in zip(unit, width)]) + '|'
-    print(sep)
-    print(titles)
-    print(unitrow)
-    print(sep)
+    table = Table(
+        screen,
+        widths,
+        alignment=['>', '>', '<', '>', '>', '>'],
+        tableformat=_single_wall_rounded if screen.unicode else _ascii_single
+    )
+    print(table.top_bar)
+    print(table.heading(heading, alignment=['^']*len(widths)))
+    print(table.heading(unit, alignment=['^']*len(widths)))
+    print(table.heading_bar)
     now = time()
     total_cpu = 0
     total_mem = 0
-    for row in jobs:
-        rowstring = '|'
-        rowstring += f'{row.pid: {width[0]}d}|'
-        rowstring += f'{row.user:>{width[1] - 1}s} |'
-        command = sniff_command(row.command)
-        if len(command) > width[2] - 1:
-            command = command[:width[2] - 4] + '...'
-        rowstring += f' {command :<{width[2] - 1}s}|'
-        rowstring += f'{row.ncpu: {width[3]}d}|'
-        total_cpu += row.ncpu
-        rowstring += f'{nice_mem(row.mem):>{width[4]}s}|'
-        total_mem += row.mem
-        rowstring += f'{calculate_walltime(row.start, now):>{width[5]}s}|'
-        print(rowstring)
-    print(sep)
-    totals = '| TOTAL: |'
-    totals += '|'.join([' '*ww for ww in width[1:3]])
-    totals += '|' + f'{total_cpu: {width[3]}d}|'
-    totals += f'{nice_mem(total_mem):>{width[4]}s}|'
-    totals += ' '*width[-1] + '|'
-    print(totals)
-    print(sep)
-    print()
+    for j in jobs:
+        row = [
+            j.pid,
+            j.user,
+            sniff_command(j.command),
+            j.ncpu,
+            nice_mem(j.mem),
+            calculate_walltime(j.start, now)
+        ]
+        total_cpu += j.ncpu
+        total_mem += j.mem
+        print(table.row(row))
+
+    footer = ['TOTAL: ', '', '', total_cpu, nice_mem(total_mem), '']
+    print(table.horizontal_bar)
+    print(table.footer(footer))
+    print(table.bottom_bar)
 
 
 if __name__ == '__main__':
