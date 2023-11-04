@@ -2,7 +2,6 @@ import psutil
 
 from collections import defaultdict
 from itertools import pairwise
-from pprint import pprint
 from shlex import split
 from time import time
 
@@ -10,9 +9,12 @@ from .process import Row
 
 
 class DisplayError(Exception):
+    ''' Error displaying information
+    '''
     pass
 
 
+# Basic table formats
 _ascii_single = """
 +-+-+-+
 | | | |
@@ -61,12 +63,17 @@ _double_wall = """
 
 
 class TerminalScreen:
+    ''' Information about the terminal screen.
+    '''
     def __init__(self, width=80, unicode=False):
         self.width = width
         self.unicode = unicode
 
 
 class Decorator:
+    ''' Codified table format for use as a base class in creating boxes and
+    tables.
+    '''
     def __init__(self, format_=_ascii_single):
         self._format = format_
         table = [r for r in format_.split('\n') if r]
@@ -223,12 +230,17 @@ class AlphaHashTable:
 
 
 def display_cores(screen, jobs):
+    ''' Display CPU allocation information.
+    '''
+    # Title
     print(Box(
         screen,
         10,
         'CPU',
         boxformat=_double_wall if screen.unicode else _ascii_double
     ))
+
+    # Count allocated cores
     system_cores = psutil.cpu_count(logical=False)
     symbol = AlphaHashTable()
 
@@ -237,16 +249,6 @@ def display_cores(screen, jobs):
         symbol.add(j.user)
         allocation[j.user] += j.ncpu
     cpu_alloc = sorted(allocation.items(), key=lambda x: x[1], reverse=True)
-    table = [(symbol[u], u, c) for u, c in cpu_alloc]
-    # ~ pprint(table)
-
-    left = system_cores
-    magic_string = ''
-    for user, cores in cpu_alloc:
-        magic_string += f' {symbol[user]}'*cores
-        left -= cores
-    magic_string += ' .'*left
-    # ~ print(magic_string)
 
     print('CPU occupancy diagram:')
     block = min(16, system_cores)
@@ -263,7 +265,9 @@ def display_cores(screen, jobs):
         data.extend([symbol[user]]*cores)
         left -= cores
     data.extend(['']*left)
-    rows = [data[block*ii:block*(ii + 1)] for ii in range(len(data)//block + 1)]
+    rows = [
+        data[block*ii:block*(ii + 1)] for ii in range(len(data)//block + 1)
+    ]
     for r, nxt in pairwise(rows):
         print(cpu.row(r))
         if nxt:
@@ -288,12 +292,17 @@ def display_cores(screen, jobs):
 
 
 def display_memory(screen, jobs):
+    ''' Display Memory allocation information.
+    '''
+    # Title
     print(Box(
         screen,
         10,
         'MEMORY',
         boxformat=_double_wall if screen.unicode else _ascii_double
     ))
+
+    # Count allocated memory
     memory_info = psutil.virtual_memory()
     system_memory = memory_info.total
     symbol = AlphaHashTable()
@@ -305,16 +314,7 @@ def display_memory(screen, jobs):
     allocation['system'] = system_memory \
         - memory_info.available \
         - sum(allocation.values())
-
     mem_alloc = sorted(allocation.items(), key=lambda x: x[1], reverse=True)
-    # ~ pprint([(k, nice_mem(v) + 'GB') for k, v in mem_alloc])
-    width = screen.width
-    magic_string = '*'*int(width*allocation['system']/system_memory)
-    for user, mem in mem_alloc:
-        if user != 'system':
-            magic_string += symbol[user]*int(width*mem/system_memory)
-    magic_string += '.'*int(width*memory_info.available/system_memory)
-    # ~ print(magic_string)
 
     print('Memory occupancy diagram:')
     memory = Table(
@@ -352,6 +352,8 @@ def display_memory(screen, jobs):
 
 
 def sniff_command(command):
+    ''' Return only relevant parts of command
+    '''
     parts = split(command)
     if any(filter(lambda x: x.endswith('python'), parts)):
         name = 'python ' + ' '.join(filter(lambda x: x.endswith('.py'), parts))
@@ -364,6 +366,8 @@ def sniff_command(command):
 
 
 def nice_mem(mem):
+    ''' Memory in gigabytes
+    '''
     nice = mem/(1024*1024*1024)
     if nice < 0.01:
         nicestring = '<0.01'
@@ -373,6 +377,8 @@ def nice_mem(mem):
 
 
 def calculate_walltime(start, now):
+    ''' String format of time difference from start to now
+    '''
     minute = 60
     hour = 60*minute
     day = 24*hour
@@ -392,81 +398,31 @@ def calculate_walltime(start, now):
 
 
 def display_jobs(screen, jobs):
+    ''' Display a table of running jobs.
+    '''
+    # Title
     print(Box(
         screen,
         10,
         'JOBS',
         boxformat=_double_wall if screen.unicode else _ascii_double
     ))
-    # ~ # Choose command to fit 25x80 or 25x120 Terminal width
-    # ~ tmp_width = (8, 15, 0, 3, 7, 15)
-    # ~ command_width = screen.width - 8 - sum(tmp_width)
-    # ~ width = (8, 15, command_width, 3, 7, 15)
-    # ~ sep = '+' + '+'.join(['-'*ww for ww in width]) + '+'
-    # ~ heading = [
-        # ~ 'PID',
-        # ~ 'User',
-        # ~ 'Command',
-        # ~ 'CPU',
-        # ~ 'Memory',
-        # ~ 'Walltime'
-    # ~ ]
-    # ~ unit = ['']*4 + ['GB', 'DAYdHH:MM:SS.xx']
-    # ~ titles = '|' \
-        # ~ + '|'.join([f'{hh:^{ww}s}' for hh, ww in zip(heading, width)]) + '|'
-    # ~ unitrow = '|' \
-        # ~ + '|'.join([f'{uu:^{ww}s}' for uu, ww in zip(unit, width)]) + '|'
-    # ~ print(sep)
-    # ~ print(titles)
-    # ~ print(unitrow)
-    # ~ print(sep)
-    # ~ now = time()
-    # ~ total_cpu = 0
-    # ~ total_mem = 0
-    # ~ for row in jobs:
-        # ~ rowstring = '|'
-        # ~ rowstring += f'{row.pid: {width[0]}d}|'
-        # ~ rowstring += f'{row.user:>{width[1] - 1}s} |'
-        # ~ command = sniff_command(row.command)
-        # ~ if len(command) > width[2] - 1:
-            # ~ command = command[:width[2] - 4] + '...'
-        # ~ rowstring += f' {command :<{width[2] - 1}s}|'
-        # ~ rowstring += f'{row.ncpu: {width[3]}d}|'
-        # ~ total_cpu += row.ncpu
-        # ~ rowstring += f'{nice_mem(row.mem):>{width[4]}s}|'
-        # ~ total_mem += row.mem
-        # ~ rowstring += f'{calculate_walltime(row.start, now):>{width[5]}s}|'
-        # ~ print(rowstring)
-    # ~ print(sep)
-    # ~ totals = '| TOTAL: |'
-    # ~ totals += '|'.join([' '*ww for ww in width[1:3]])
-    # ~ totals += '|' + f'{total_cpu: {width[3]}d}|'
-    # ~ totals += f'{nice_mem(total_mem):>{width[4]}s}|'
-    # ~ totals += ' '*width[-1] + '|'
-    # ~ print(totals)
-    # ~ print(sep)
-    # ~ print()
 
+    # Setup table and print top matter
+    headings = ['PID', 'User', 'Command', 'CPU', 'Memory', 'Walltime']
     widths = (8, 15, '*', 3, 7, 15)
-    heading = [
-        'PID',
-        'User',
-        'Command',
-        'CPU',
-        'Memory',
-        'Walltime'
-    ]
-    unit = ['']*4 + ['GB', 'DAYdHH:MM:SS.xx']
+    units = ['']*4 + ['GB', 'DAYdHH:MM:SS.xx']
     table = Table(
         screen,
-        widths,
+        widths=widths,
         alignment=['>', '>', '<', '>', '>', '>'],
         tableformat=_single_wall_rounded if screen.unicode else _ascii_single
     )
     print(table.top_bar)
-    print(table.heading(heading, alignment=['^']*len(widths)))
-    print(table.heading(unit, alignment=['^']*len(widths)))
+    print(table.heading(headings, alignment=['^']*len(widths)))
+    print(table.heading(units, alignment=['^']*len(widths)))
     print(table.heading_bar)
+    # Calculate row data and display
     now = time()
     total_cpu = 0
     total_mem = 0
@@ -483,22 +439,8 @@ def display_jobs(screen, jobs):
         total_mem += j.mem
         print(table.row(row))
 
+    # Display totals
     footer = ['TOTAL: ', '', '', total_cpu, nice_mem(total_mem), '']
     print(table.horizontal_bar)
     print(table.footer(footer))
     print(table.bottom_bar)
-
-
-if __name__ == '__main__':
-    r = Row(
-        pid=12987,
-        user='jack',
-        command='/opt/mpich/bin/mpiexec.hydra -n 3 sleep 60',
-        ncpu=3,
-        mem=11927552,
-        start=1697795306.76
-    )
-    jobs = [r]
-
-    display_cores(jobs, wide=True)
-    display_jobs(jobs, wide=True)

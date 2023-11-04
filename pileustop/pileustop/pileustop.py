@@ -49,8 +49,8 @@ def main():
     )
     parser.add_argument(
         '-u', '--unicode',
-        help='Use unicode characters',
-        action='store_true'
+        help='Do NOT use unicode characters',
+        action='store_false'
     )
     args = parser.parse_args()
     pileustop(args)
