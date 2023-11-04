@@ -35,13 +35,35 @@ def pileustop(args):
                 continue
 
     screen = TerminalScreen(width=120 if args.wide else 80, unicode=args.unicode)
-    display_cores(screen, rows)
-    display_memory(screen, rows)
-    display_jobs(screen, rows)
+    if args.cpu:
+        display_cores(screen, rows)
+    if args.memory:
+        display_memory(screen, rows)
+    if args.jobs:
+        display_jobs(screen, rows)
+    if not (args.cpu or args.memory or args.jobs):
+        display_cores(screen, rows)
+        display_memory(screen, rows)
+        display_jobs(screen, rows)
 
 
 def main():
     parser = ArgumentParser()
+    parser.add_argument(
+        '-c', '--cpu',
+        help='Display CPU allocations',
+        action='store_true'
+    )
+    parser.add_argument(
+        '-m', '--memory',
+        help='Display memory allocations',
+        action='store_true'
+    )
+    parser.add_argument(
+        '-j', '--jobs',
+        help='Display job allocations',
+        action='store_true'
+    )
     parser.add_argument(
         '-w', '--wide',
         help='Use 120 character wide display rather than 80',
