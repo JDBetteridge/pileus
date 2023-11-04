@@ -287,6 +287,7 @@ def display_cores(screen, jobs):
     print(key.heading_bar)
     for user, cores in cpu_alloc:
         print(key.row([symbol[user], user, cores]))
+    print(key.row(['', 'FREE', left]))
     print(key.bottom_bar)
     print()
 
