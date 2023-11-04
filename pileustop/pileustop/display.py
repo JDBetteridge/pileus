@@ -1,6 +1,7 @@
 import psutil
 
 from collections import defaultdict
+from itertools import pairwise
 from pprint import pprint
 from shlex import split
 from time import time
@@ -133,18 +134,21 @@ class Table(Decorator):
         if free < 0:
             raise DisplayError('Table width wider than screen width')
         nflex_cols = widths.count('*')
-        min_flex_width = free//nflex_cols
-        remainder = free - (nflex_cols*min_flex_width)
-        flex_widths = [min_flex_width + 1] * remainder
-        flex_widths.extend([min_flex_width] * (nflex_cols - remainder))
+        if nflex_cols:
+            min_flex_width = free//nflex_cols
+            remainder = free - (nflex_cols*min_flex_width)
+            flex_widths = [min_flex_width + 1] * remainder
+            flex_widths.extend([min_flex_width] * (nflex_cols - remainder))
 
-        fixed_widths = []
-        for w in widths:
-            if isinstance(w, int):
-                fixed_widths.append(w)
-            else:
-                fixed_widths.append(flex_widths.pop(0))
-        self.widths = fixed_widths
+            fixed_widths = []
+            for w in widths:
+                if isinstance(w, int):
+                    fixed_widths.append(w)
+                else:
+                    fixed_widths.append(flex_widths.pop(0))
+            self.widths = fixed_widths
+        else:
+            self.widths = widths
         self.alignment = alignment or ('^',)*len(widths)
         self.type_dict = {
             int: 'd',
@@ -234,7 +238,7 @@ def display_cores(screen, jobs):
         allocation[j.user] += j.ncpu
     cpu_alloc = sorted(allocation.items(), key=lambda x: x[1], reverse=True)
     table = [(symbol[u], u, c) for u, c in cpu_alloc]
-    pprint(table)
+    # ~ pprint(table)
 
     left = system_cores
     magic_string = ''
@@ -242,7 +246,44 @@ def display_cores(screen, jobs):
         magic_string += f' {symbol[user]}'*cores
         left -= cores
     magic_string += ' .'*left
-    print(magic_string)
+    # ~ print(magic_string)
+
+    print('CPU occupancy diagram:')
+    block = min(16, system_cores)
+    cpu = Table(
+        screen,
+        widths=(3, )*block,
+        alignment=('^', )*block,
+        tableformat=_single_wall_rounded if screen.unicode else _ascii_single
+    )
+    print(cpu.top_bar)
+    data = []
+    left = system_cores
+    for user, cores in cpu_alloc:
+        data.extend([symbol[user]]*cores)
+        left -= cores
+    data.extend(['']*left)
+    rows = [data[block*ii:block*(ii + 1)] for ii in range(len(data)//block + 1)]
+    for r, nxt in pairwise(rows):
+        print(cpu.row(r))
+        if nxt:
+            print(cpu.horizontal_bar)
+    if rows[-1]:
+        print(cpu.row(rows[-1]))
+    print(cpu.bottom_bar)
+
+    print('Key:')
+    key = Table(
+        screen,
+        widths=(3, 15, 3),
+        tableformat=_single_wall_rounded if screen.unicode else _ascii_single
+    )
+    print(key.top_bar)
+    print(key.heading(['SYM', 'User', 'CPU']))
+    print(key.heading_bar)
+    for user, cores in cpu_alloc:
+        print(key.row([symbol[user], user, cores]))
+    print(key.bottom_bar)
     print()
 
 
@@ -266,14 +307,47 @@ def display_memory(screen, jobs):
         - sum(allocation.values())
 
     mem_alloc = sorted(allocation.items(), key=lambda x: x[1], reverse=True)
-    pprint([(k, nice_mem(v) + 'GB') for k, v in mem_alloc])
+    # ~ pprint([(k, nice_mem(v) + 'GB') for k, v in mem_alloc])
     width = screen.width
     magic_string = '*'*int(width*allocation['system']/system_memory)
     for user, mem in mem_alloc:
         if user != 'system':
             magic_string += symbol[user]*int(width*mem/system_memory)
     magic_string += '.'*int(width*memory_info.available/system_memory)
-    print(magic_string)
+    # ~ print(magic_string)
+
+    print('Memory occupancy diagram:')
+    memory = Table(
+        screen,
+        widths=('*'),
+        tableformat=_single_wall_rounded if screen.unicode else _ascii_single
+    )
+    print(memory.top_bar)
+    width = screen.width - 2
+    magic_string = '*'*int(width*allocation['system']/system_memory)
+    for user, mem in mem_alloc:
+        if user != 'system':
+            magic_string += symbol[user]*int(width*mem/system_memory)
+    magic_string += '.'*int(width*memory_info.available/system_memory)
+    print(memory.row([magic_string]))
+    print(memory.bottom_bar)
+
+    print('Key:')
+    key = Table(
+        screen,
+        widths=(3, 15, 7),
+        tableformat=_single_wall_rounded if screen.unicode else _ascii_single
+    )
+    print(key.top_bar)
+    print(key.heading(['SYM', 'User', 'Memory']))
+    print(key.heading(['', '', 'GB']))
+    print(key.heading_bar)
+    for user, mem in mem_alloc:
+        if user == 'system':
+            print(key.row(['*', user, nice_mem(mem)]))
+        else:
+            print(key.row([symbol[user], user, nice_mem(mem)]))
+    print(key.bottom_bar)
     print()
 
 
