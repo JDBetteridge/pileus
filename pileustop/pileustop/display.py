@@ -347,6 +347,7 @@ def display_memory(screen, jobs):
             print(key.row(['*', user, nice_mem(mem)]))
         else:
             print(key.row([symbol[user], user, nice_mem(mem)]))
+    print(key.row(['.', 'FREE', nice_mem(memory_info.available)]))
     print(key.bottom_bar)
     print()
 
