@@ -423,10 +423,11 @@ def display_jobs(screen, jobs):
     print(table.heading(units, alignment=['^']*len(widths)))
     print(table.heading_bar)
     # Calculate row data and display
+    job_alloc = sorted(jobs, key=lambda x: x.start)
     now = time()
     total_cpu = 0
     total_mem = 0
-    for j in jobs:
+    for j in job_alloc:
         row = [
             j.pid,
             j.user,
