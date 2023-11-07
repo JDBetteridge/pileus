@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pileustop"
+version = "0.1a"
+license = {file = "licence.txt"}
+authors = [
+  {name="Jack Betteridge", email="j.betteridge@imperial.ac.uk"},
+]
+description = "A single node mpi wrapper and process watching solution"
+readme = "readme.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Development Status :: 3 - Alpha",
+]
+
+dependencies = [
+  "psutil",
+]
+
+[project.urls]
+Homepage = "https://github.com/JDBetteridge/pileus/tree/main/pileustop"
+
+[project.scripts]
+mpiwrapper = "pileustop.mpiwrapper:main"
+pileustop = "pileustop.pileustop:main"
