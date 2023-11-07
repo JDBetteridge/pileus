@@ -430,10 +430,14 @@ def display_jobs(screen, jobs):
     total_cpu = 0
     total_mem = 0
     for j in job_alloc:
+        command = sniff_command(j.command)
+        # Truncate the command to fit the column width
+        if len(command) > table.widths[2]:
+            command = command[:table.widths[2] - 3] + '...'
         row = [
             j.pid,
             j.user,
-            sniff_command(j.command),
+            command,
             j.ncpu,
             nice_mem(j.mem),
             calculate_walltime(j.start, now)
