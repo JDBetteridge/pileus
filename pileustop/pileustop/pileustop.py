@@ -15,11 +15,7 @@ def pileustop(args):
         for pid in pf.pidmap.keys():
             try:
                 p = psutil.Process(pid)
-            except psutil.NoSuchProcess:
-                pf.remove_pid(pid)
-                continue
 
-            try:
                 with p.oneshot():
                     rpid = p.pid
                     rcmd = " ".join(p.cmdline())
@@ -32,6 +28,7 @@ def pileustop(args):
                     mem += cm
                 rows.append(Row(rpid, user, rcmd, pf.pidmap[pid], mem, rtime))
             except psutil.NoSuchProcess:
+                pf.remove_pid(pid)
                 continue
 
     screen = TerminalScreen(width=120 if args.wide else 80, unicode=args.unicode)
