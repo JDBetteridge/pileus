@@ -7,8 +7,16 @@ export SLEPC_DIR=/data/shared/pileus/slepc
 # Location of package dependencies
 export PACKAGES=/data/shared/pileus/petsc/packages
 
+# Compiler variables
+export CC=/usr/bin/gcc-13
+export CXX=/usr/bin/g++-13
+export FC=/usr/bin/gfortran-13
+export F90=/usr/bin/gfortran-13
+export FORT=/usr/bin/gfortran-13
+
 # MPI variables
 export MPICH_DIR=$PACKAGES
+export MPI_HOME=$PACKAGES
 export MPIEXEC=$MPICH_DIR/bin/mpiexec
 export MPICC=$MPICH_DIR/bin/mpicc
 export MPICXX=$MPICH_DIR/bin/mpicxx
