@@ -24,7 +24,7 @@ SLEPC_TAG=${SLEPC_TAG:-v3.23.1}
 
 # Checkout the latest tag of PETSc
 cd $BASE_INSTALL_DIR/petsc
-git checkout -b $PETSC_TAG
+git checkout -b $PETSC_TAG tags/$PETSC_TAG
 
 # Build MPICH and all required packages
 $PYTHON ./configure \
@@ -65,7 +65,7 @@ export PACKAGES=$BASE_INSTALL_DIR/petsc/packages
 
 # Checkout the latest tag of SLEPc
 cd $BASE_INSTALL_DIR/slepc
-git checkout -b $SLEPC_TAG
+git checkout -b $SLEPC_TAG tags/$SLEPC_TAG
 
 
 ####################
