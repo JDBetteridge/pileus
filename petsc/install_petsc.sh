@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 # Set preferred executables
 CC=/usr/bin/gcc-13
@@ -14,8 +15,8 @@ MAKE_NP=32 # Use up to 32 cores when building
 git clone https://gitlab.com/petsc/petsc.git
 git clone https://gitlab.com/slepc/slepc.git
 # Checkout the provided tag
-PETSC_TAG=${PETSC_TAG:v3.23.3}
-SLEPC_TAG=${SLEPC_TAG:v3.23.3}
+PETSC_TAG=${PETSC_TAG:-v3.23.3}
+SLEPC_TAG=${SLEPC_TAG:-v3.23.1}
 
 ####################
 # Part 1: Packages #
