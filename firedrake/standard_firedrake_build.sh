@@ -4,14 +4,14 @@ set -x
 source /data/shared/pileus/firedrake/standard_variables
 
 # Create the virtualenv
-VENV_NAME=${VENV_NAME=-firedrake-real-opt}
+VENV_NAME=${VENV_NAME:-firedrake-real-opt}
 $PYTHON -m venv $VENV_NAME
 source ./$VENV_NAME/bin/activate
 
 # Install Firedrake
 pip cache remove petsc4py
 pip cache remove firedrake
-pip install --no-binary h5py 'firedrake[check,vtk,slepc]'
+env CC=$MPICC CXX=$MPICXX pip install --no-binary h5py 'firedrake[check,vtk,slepc]'
 
 # Clone and install Gusto
 mkdir -p ./$VENV_NAME/src
