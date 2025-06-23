@@ -10,6 +10,7 @@ source ./$VENV_NAME/bin/activate
 
 # Install Firedrake
 pip cache remove petsc4py
+pip cache remove slepc4py
 pip cache remove firedrake
 env CC=$MPICC CXX=$MPICXX pip install --no-binary h5py 'firedrake[check,vtk,slepc]'
 
