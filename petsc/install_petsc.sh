@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 # Set preferred executables
 CC=/usr/bin/gcc-13
@@ -10,16 +11,22 @@ PYTHON=/usr/bin/python3.11
 BASE_INSTALL_DIR=$PWD
 MAKE_NP=32 # Use up to 32 cores when building
 
-# Clone Firedrake fork of repositories
-git clone https://github.com/firedrakeproject/petsc.git
-git clone https://github.com/firedrakeproject/slepc.git
+# Clone PETSc and SLEPc repositories
+git clone https://gitlab.com/petsc/petsc.git
+git clone https://gitlab.com/slepc/slepc.git
+# Checkout the provided tag
+PETSC_TAG=${PETSC_TAG:-v3.23.3}
+SLEPC_TAG=${SLEPC_TAG:-v3.23.1}
 
 ####################
 # Part 1: Packages #
 ####################
 
-# Build MPICH and all required packages
+# Checkout the latest tag of PETSc
 cd $BASE_INSTALL_DIR/petsc
+git checkout -b $PETSC_TAG tags/$PETSC_TAG
+
+# Build MPICH and all required packages
 $PYTHON ./configure \
     --with-cc=$CC \
     --with-cxx=$CXX \
@@ -54,7 +61,12 @@ $PYTHON ./configure \
 # Don't run make here, we only want MPICH and HWLOC
 # It is also necessary to move `petscconf.h` so packages isn't treated like a working PETSc
 mv packages/include/petscconf.h packages/include/old_petscconf.nope
-export PACKAGES=$BASE_INSTALL_DIR/petsc/packages; \
+export PACKAGES=$BASE_INSTALL_DIR/petsc/packages
+
+# Checkout the latest tag of SLEPc
+cd $BASE_INSTALL_DIR/slepc
+git checkout -b $SLEPC_TAG tags/$SLEPC_TAG
+
 
 ####################
 # Part 2: Real     #
