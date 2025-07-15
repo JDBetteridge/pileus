@@ -23,6 +23,9 @@ export MPICXX=$MPICH_DIR/bin/mpicxx
 export MPIFORT=$MPICH_DIR/bin/mpifort
 export MPIF90=$MPICH_DIR/bin/mpif90
 
+# MPI4PY variables
+export MPI4PY_LIBMPI=$PACKAGES/lib
+
 # HDF5 Variables
 export HDF5_DIR=$PACKAGES
 export HDF5_MPI=ON
